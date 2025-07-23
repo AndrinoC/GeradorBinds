@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Gerador de Binds Responsivo</title>
+    <style>
+      :root {
+        --bg: #1e1e1e;
+        --card: #282b30;
+        --primary: #ff8800;
+        --accent: #5a68a5;
+        --text: #f0f0f0;
+        --border: #4f5358;
+        --preview-bg: #333;
+        --preview-border: var(--primary);
+        --font-base: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 1rem;
+        font-family: var(--font-base);
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .card {
+        background: var(--card);
+        border: 2px solid var(--primary);
+        border-radius: 8px;
+        max-width: 900px;
+        width: 100%;
+        padding: 1rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-gap: 1rem;
+      }
+      .card header {
+        grid-column: span 2;
+        text-align: center;
+        padding: 0.5rem 0;
+        border-bottom: 2px solid var(--primary);
+      }
+      .card header h1 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: var(--primary);
+      }
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #ccc;
+        font-size: 0.9rem;
+      }
+      textarea,
+      input,
+      select,
+      button {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--card);
+        color: var(--text);
+        font-size: 1rem;
+      }
+      textarea {
+        resize: vertical;
+      }
+      .full {
+        grid-column: span 2;
+      }
+      button {
+        background: var(--accent);
+        cursor: pointer;
+        font-weight: bold;
+        transition: background 0.3s;
+      }
+      button:hover {
+        background: #7289da;
+      }
+      #previewBox {
+        grid-column: span 2;
+        background: var(--preview-bg);
+        border: 2px solid var(--preview-border);
+        border-radius: 4px;
+        padding: 0.75rem;
+        min-height: 2.5em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-size: 1.1rem;
+        color: var(--text);
+        flex-wrap: wrap;
+        text-align: center;
+      }
+      #descEstilo {
+        grid-column: span 2;
+        color: #aaa;
+        font-style: italic;
+        margin-top: -0.5rem;
+        margin-bottom: 1rem;
+      }
+      .slider-container {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      @media (max-width: 600px) {
+        .card {
+          grid-template-columns: 1fr;
+        }
+      }
+      .input-container {
+        display: flex;
+        align-items: center;
+        position: relative;
+      }
+
+      #frase {
+        flex-grow: 1;
+        border-radius: 4px 0 0 4px;
+      }
+
+      #emojiBtn {
+        width: auto;
+        padding: 0.5rem 0.75rem;
+        border-left: none;
+        border-radius: 0 4px 4px 0;
+        background: var(--accent);
+        font-size: 1.2rem;
+        color: initial;
+      }
+
+      #emojiMenu {
+        display: none;
+        position: absolute;
+        z-index: 100;
+        background: var(--card);
+        border: 1px solid var(--primary);
+        border-radius: 8px;
+        max-height: 250px;
+        overflow-y: auto;
+        padding: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+
+        grid-template-columns: repeat(4, 1fr);
+        gap: 5px;
+        margin-top: 5px;
+      }
+      #emojiMenu.show {
+        display: grid;
+      }
+
+      #emojiMenu > div {
+        cursor: pointer;
+        text-align: center;
+        padding: 5px;
+        border-radius: 4px;
+        font-size: 1.5rem;
+        transition: background-color 0.2s;
+      }
+
+      #emojiMenu > div:hover {
+        background-color: var(--accent);
+      }
+
+      @media (max-width: 600px) {
+        #emojiMenu {
+          width: 95%;
+        }
+        #emojiMenu > div {
+          font-size: 1.2rem;
+        }
+      }
+
+      .description-box {
+        background-color: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 0.5rem;
+        color: #aaa;
+        font-style: italic;
+        font-size: 0.9rem;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        user-select: none;
+        pointer-events: none;
+      }
+
+      .card header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .toggle-container {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 28px;
+      }
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #4f5358;
+        -webkit-transition: 0.4s;
+        transition: 0.4s;
+      }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        -webkit-transition: 0.4s;
+        transition: 0.4s;
+      }
+      input:checked + .slider {
+        background-color: var(--primary);
+      }
+      input:focus + .slider {
+        box-shadow: 0 0 1px var(--primary);
+      }
+      input:checked + .slider:before {
+        -webkit-transform: translateX(22px);
+        -ms-transform: translateX(22px);
+        transform: translateX(22px);
+      }
+      .slider.round {
+        border-radius: 34px;
+      }
+      .slider.round:before {
+        border-radius: 50%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <header>
+        <h1>GERADOR DE BINDS</h1>
+        <div class="toggle-container">
+          <span>Bind de /me</span>
+          <label class="switch">
+            <input type="checkbox" id="useMeBind" checked />
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </header>
+
+      <div id="fraseContainer" class="full">
+        <label>📝 Frase/Palavras:</label>
+        <div class="input-container">
+          <textarea
+            id="frase"
+            rows="2"
+            placeholder="É o QRA do QTH!"
+          ></textarea>
+          <button id="emojiBtn" title="Adicionar Emoji">🙂</button>
+        </div>
+        <div id="emojiMenu"></div>
+      </div>
+      <div id="comandosContainer" class="full" style="display: none">
+        <label>📜 Comandos:</label>
+        <textarea
+          id="comandos"
+          rows="2"
+          placeholder="e namaste, e continencia"
+        ></textarea>
+      </div>
+
+      <div class="me-toggle">
+        <label>🎭 Estilo:</label>
+        <select id="estilo">
+          <option value="0">0: Apenas Cor Primária</option>
+          <option value="1">1: Alterna cores palavra a palavra</option>
+          <option value="2">2: Digitação letra a letra da 1ª palavra</option>
+          <option value="3">3: Frase piscando entre cores</option>
+          <option value="4">4: Destaca cada palavra em sequência</option>
+          <option value="5">5: Exibe palavra por vez em looping</option>
+          <option value="6">6: Ondas Invertidas</option>
+          <option value="7">7: Cores Aleatórias</option>
+          <option value="8">8: Letras alternadas</option>
+          <option value="9">9: Arco-íris fixo</option>
+          <option value="10">10: Crescendo</option>
+        </select>
+      </div>
+      <div class="me-toggle">
+        <label>ℹ️ Descrição:</label>
+        <div id="descBox" class="description-box"></div>
+      </div>
+
+      <div class="me-toggle">
+        <label>🎲 Animação:</label>
+        <input id="anime" type="text" placeholder="e continencia" />
+      </div>
+      <div class="me-toggle">
+        <label>🎨 Cor 1:</label>
+        <select id="cor1"></select>
+      </div>
+      <div class="me-toggle">
+        <label>🎨 Cor 2:</label>
+        <select id="cor2"></select>
+      </div>
+      <div id="repeticoesContainer" class="me-toggle" style="display: none">
+        <label>🔁 Repetições:</label>
+        <select id="repeticoes"></select>
+      </div>
+
+      <div class="full slider-container me-toggle">
+        <label>🔠 Tamanho da fonte:</label>
+        <input
+          type="range"
+          id="fontSize"
+          min="10"
+          max="400"
+          step="10"
+          value="32"
+        />
+        <span id="fontSizeValue">32</span>
+      </div>
+
+      <div
+        id="tamanhoEstiloContainer"
+        class="me-toggle full"
+        style="display: none"
+      >
+        <label>📈 Estilo de tamanho:</label>
+        <select id="tamanhoEstilo">
+          <option value="0">0: Tamanho fixo</option>
+          <option value="1">1: Maior para menor</option>
+          <option value="2">2: Menor para maior</option>
+          <option value="3">3: Texto cresce</option>
+          <option value="4">4: Texto diminui</option>
+        </select>
+      </div>
+
+      <div>
+        <label>#️⃣ Tecla:</label>
+        <button id="keyBtn">Clique e pressione</button>
+        <input type="hidden" id="tecla" />
+      </div>
+      <div>
+        <label>⏱ Velocidade (ms):</label>
+        <input type="number" id="tempo" value="300" min="50" step="50" />
+      </div>
+
+      <div class="full"><button id="btnGerar">Gerar Bind</button></div>
+      <div class="full me-toggle">
+        <button id="replayPreviewBtn" style="background-color: var(--primary)">
+          Mostrar resultado
+        </button>
+      </div>
+      <div class="full">
+        <label>🖨 Resultado:</label>
+        <input
+          type="text"
+          id="resul"
+          readonly
+          placeholder="Bind gerada aparecerá aqui"
+        />
+      </div>
+      <div id="previewBox" class="full me-toggle">Preview do Estilo</div>
+    </div>
+    <script>
+      const estiloDesc = {
+        0: "A frase inteira fica com a cor primária selecionada, sem animação.",
+        1: "Alterna cores palavra a palavra.",
+        2: "Digitação letra por letra da primeira palavra.",
+        3: "Frase piscando entre as duas cores.",
+        4: "Destaca cada palavra em sequência.",
+        5: "Exibe uma palavra por vez em looping.",
+        6: "Wave invertida: cores em efeito de onda invertida.",
+        7: "Random Colors: cada palavra recebe cor aleatória.",
+        8: "Cada letra alterna entre as cores.",
+        9: "Aplica ciclo fixo de 6 cores estilo arco-íris.",
+        10: "Vai crescendo a frase palavra a palavra.",
+      };
+
+      const cores = [
+        { nome: "Branco", codigo: "~HC_0~", cor: "#FFFFFF" },
+        { nome: "Preto", codigo: "~HC_1~", cor: "#000000" },
+        { nome: "Cinza", codigo: "~HC_2~", cor: "#C0C0C0" },
+        { nome: "Vermelho", codigo: "~HC_6~", cor: "#FF0000" },
+        { nome: "Rosa", codigo: "~HC_7~", cor: "#FF69B4" },
+        { nome: "Azul", codigo: "~HC_9~", cor: "#0000FF" },
+        { nome: "Amarelo", codigo: "~HC_12~", cor: "#FFFF00" },
+        { nome: "Verde", codigo: "~HC_18~", cor: "#00FF00" },
+        { nome: "Roxo", codigo: "~HC_21~", cor: "#800080" },
+        { nome: "Laranja", codigo: "~HC_26~", cor: "#FFA500" },
+        { nome: "Azul Claro", codigo: "~HC_52~", cor: "#00BFFF" },
+        { nome: "Verde Claro", codigo: "~HC_210~", cor: "#66FF66" },
+      ];
+
+      const sel = (id) => document.getElementById(id);
+      const useMeBind = sel("useMeBind");
+      const meToggleElements = document.querySelectorAll(".me-toggle");
+      const repeticoesSelect = sel("repeticoes");
+      const tamanhoEstiloContainer = sel("tamanhoEstiloContainer");
+
+      const cor1 = sel("cor1"),
+        cor2 = sel("cor2");
+      cores.forEach(({ nome, codigo, cor }) => {
+        [cor1, cor2].forEach((sel) => {
+          const opt = document.createElement("option");
+          opt.value = codigo;
+          opt.textContent = nome;
+          opt.style.color = cor;
+          if (cor === "#000000") opt.style.backgroundColor = "#e0e0e0";
+          sel.appendChild(opt);
+        });
+      });
+      for (let i = 1; i <= 8; i++) {
+        const option = document.createElement("option");
+        option.value = i;
+        option.textContent = `${i} vez${i > 1 ? "es" : ""}`;
+        repeticoesSelect.appendChild(option);
+      }
+      const hcToCss = Object.fromEntries(
+        cores.map(({ codigo, cor }) => [codigo, cor])
+      );
+      let previewInterval;
+
+      function calculateSize(sizeStyle, baseSize, currentStep, totalSteps) {
+        baseSize = Number(baseSize);
+        const minSize = 10;
+
+        if (totalSteps <= 1) {
+          return baseSize;
+        }
+
+        let progress = currentStep / (totalSteps - 1);
+
+        switch (sizeStyle) {
+          case "1":
+            return Math.round(baseSize - (baseSize - minSize) * progress);
+
+          case "2":
+            return Math.round(minSize + (baseSize - minSize) * progress);
+
+          case "3":
+            const easeInProgress = progress * progress;
+            return Math.round(minSize + (baseSize - minSize) * easeInProgress);
+
+          case "4":
+            const easeOutProgress = 1 - Math.pow(1 - progress, 2);
+            return Math.round(
+              baseSize - (baseSize - minSize) * easeOutProgress
+            );
+
+          case "0":
+          default:
+            return baseSize;
+        }
+      }
+
+      function toggleConditionalVisibility() {
+        const estilo = sel("estilo").value;
+        const isMeMode = useMeBind.checked;
+
+        sel("repeticoesContainer").style.display =
+          estilo !== "0" && isMeMode ? "block" : "none";
+        tamanhoEstiloContainer.style.display =
+          estilo !== "0" && isMeMode ? "block" : "none";
+      }
+
+      function toggleUiMode() {
+        const isMeMode = useMeBind.checked;
+        sel("fraseContainer").style.display = isMeMode ? "block" : "none";
+        sel("comandosContainer").style.display = isMeMode ? "none" : "block";
+        meToggleElements.forEach((el) => {
+          const displayStyle =
+            el.classList.contains("slider-container") || el.id === "previewBox"
+              ? "flex"
+              : "block";
+          el.style.display = isMeMode ? displayStyle : "none";
+        });
+        toggleConditionalVisibility();
+        if (isMeMode) updatePreview();
+        else clearInterval(previewInterval);
+      }
+
+      function updatePreview() {
+        clearInterval(previewInterval);
+        if (!useMeBind.checked) return;
+
+        const estilo = sel("estilo").value;
+        const frase = sel("frase").value.trim() || "PREVIEW TESTE";
+        const palavras = frase.split(/\s+/);
+        const letras = frase.split("");
+        const c1 = sel("cor1").value;
+        const c2 = sel("cor2").value;
+        const baseSize = sel("fontSize").value;
+        const sizeStyle = sel("tamanhoEstilo").value;
+        const repeticoes = parseInt(sel("repeticoes").value, 10) || 1;
+        const box = sel("previewBox");
+        const tempo = 500;
+
+        sel("descBox").textContent = estiloDesc[estilo] || "";
+        box.innerHTML = "";
+
+        const createSpan = (text, color, size) =>
+          `<span style="color:${hcToCss[color]}; font-size:${size}px">${text}</span>`;
+
+        if (estilo === "0") {
+          box.innerHTML = createSpan(frase, c1, baseSize);
+          return;
+        }
+
+        let baseFrames = [];
+        const buildTotalSteps = (() => {
+          switch (estilo) {
+            case "2":
+              return palavras[0] ? palavras[0].length : 0;
+            case "3":
+              return 2;
+            case "8":
+              return letras.length > 0 ? letras.length : 1;
+            case "10":
+              return palavras.length;
+            default:
+              return palavras.length;
+          }
+        })();
+
+        for (let i = 0; i < buildTotalSteps; i++) {
+          const currentSize = calculateSize(
+            sizeStyle,
+            baseSize,
+            i,
+            buildTotalSteps
+          );
+          let html = "";
+          switch (estilo) {
+            case "1":
+              html = palavras
+                .map((p, j) =>
+                  createSpan(p, (i + j) % 2 ? c2 : c1, currentSize)
+                )
+                .join(" ");
+              break;
+            case "2":
+              html = createSpan(palavras[0].slice(0, i + 1), c1, currentSize);
+              break;
+            case "3":
+              html = createSpan(frase, i % 2 ? c2 : c1, currentSize);
+              break;
+            case "4":
+              html = palavras
+                .map((p, j) => createSpan(p, i === j ? c2 : c1, currentSize))
+                .join(" ");
+              break;
+            case "5":
+              html = createSpan(
+                palavras[i % palavras.length],
+                i % 2 ? c2 : c1,
+                currentSize
+              );
+              break;
+            case "6":
+              const half = Math.floor(palavras.length / 2);
+              html = palavras
+                .map((p, j) =>
+                  createSpan(
+                    p,
+                    (j + i) % palavras.length < half ? c2 : c1,
+                    currentSize
+                  )
+                )
+                .join(" ");
+              break;
+            case "7":
+              html = palavras
+                .map((p) =>
+                  createSpan(
+                    p,
+                    cores[Math.floor(Math.random() * cores.length)].codigo,
+                    currentSize
+                  )
+                )
+                .join(" ");
+              break;
+            case "8":
+              html = createSpan(
+                letras[i] || "",
+                i % 2 === 0 ? c1 : c2,
+                currentSize
+              );
+              break;
+            case "9":
+              const arco = [
+                "~HC_6~",
+                "~HC_7~",
+                "~HC_9~",
+                "~HC_12~",
+                "~HC_18~",
+                "~HC_21~",
+              ];
+              html = letras
+                .map((l, j) =>
+                  createSpan(l, arco[(j + i) % arco.length], baseSize)
+                )
+                .join("");
+              break;
+            case "10":
+              html = createSpan(
+                palavras.slice(0, i + 1).join(" "),
+                c1,
+                currentSize
+              );
+              break;
+          }
+          if (html) baseFrames.push(html);
+        }
+
+        let animationSequence = [];
+        if (baseFrames.length > 0) {
+          for (let i = 0; i < repeticoes; i++) {
+            if (estilo === "7") {
+              const currentSize = calculateSize(
+                sizeStyle,
+                baseSize,
+                i,
+                repeticoes
+              );
+              animationSequence.push(
+                palavras
+                  .map((p) =>
+                    createSpan(
+                      p,
+                      cores[Math.floor(Math.random() * cores.length)].codigo,
+                      currentSize
+                    )
+                  )
+                  .join(" ")
+              );
+            } else {
+              animationSequence.push(...baseFrames);
+            }
+          }
+        } else {
+          box.innerHTML = createSpan(frase, c1, baseSize);
+          return;
+        }
+
+        let frameIndex = 0;
+        const totalFrames = animationSequence.length;
+
+        if (totalFrames === 0) return;
+
+        box.innerHTML = animationSequence[0];
+
+        previewInterval = setInterval(() => {
+          frameIndex++;
+          if (frameIndex >= totalFrames) {
+            clearInterval(previewInterval);
+            return;
+          }
+          box.innerHTML = animationSequence[frameIndex];
+        }, tempo);
+      }
+
+      function gerarBind() {
+        const tecla = sel("tecla").value;
+        if (!tecla) {
+          alert("Selecione uma tecla");
+          return;
+        }
+        const tempo = parseInt(sel("tempo").value) || 300;
+        const isMeBind = sel("useMeBind").checked;
+        let resultadoFinal;
+
+        if (isMeBind) {
+          const frase = sel("frase").value.trim();
+          if (!frase) {
+            alert("Por favor, insira uma frase.");
+            return;
+          }
+          const palavras = frase.split(/\s+/);
+          const anim = sel("anime").value.trim();
+          const estilo = sel("estilo").value;
+          const baseSize = sel("fontSize").value;
+          const sizeStyle = sel("tamanhoEstilo").value;
+          const c1 = sel("cor1").value,
+            c2 = sel("cor2").value;
+          const repeticoes = parseInt(sel("repeticoes").value, 10);
+          let baseFrames = [];
+
+          switch (estilo) {
+            case "0":
+              baseFrames.push(`${c1} ${palavras.join(" ")}`);
+              break;
+            case "1":
+              palavras.forEach((p, i) =>
+                baseFrames.push(`${i % 2 ? c2 : c1} ${p}`)
+              );
+              break;
+            case "2":
+              for (let i = 1; i <= palavras[0].length; i++)
+                baseFrames.push(`${c1} ${palavras[0].substring(0, i)}`);
+              break;
+            case "3":
+              const f = palavras.join(" ");
+              for (let i = 0; i < 2; i++)
+                baseFrames.push(`${i % 2 ? c2 : c1} ${f}`);
+              break;
+            case "4":
+              palavras.forEach((_, i) =>
+                baseFrames.push(
+                  palavras.map((p, j) => `${j === i ? c2 : c1} ${p}`).join(" ")
+                )
+              );
+              break;
+            case "5":
+              palavras.forEach((p, i) =>
+                baseFrames.push(`${i % 2 ? c2 : c1} ${p}`)
+              );
+              break;
+            case "6":
+              const meio = Math.floor(palavras.length / 2);
+              palavras.forEach((p, i) =>
+                baseFrames.push(`${i < meio ? c2 : c1} ${p}`)
+              );
+              break;
+            case "7":
+              baseFrames.push(
+                palavras
+                  .map(
+                    (p) =>
+                      `${
+                        cores[Math.floor(Math.random() * cores.length)].codigo
+                      } ${p}`
+                  )
+                  .join(" ")
+              );
+              break;
+            case "8":
+              palavras
+                .join("")
+                .split("")
+                .forEach((l, i) =>
+                  baseFrames.push(`${i % 2 === 0 ? c1 : c2} ${l}`)
+                );
+              break;
+            case "9":
+              const a = [
+                "~HC_6~",
+                "~HC_7~",
+                "~HC_9~",
+                "~HC_12~",
+                "~HC_18~",
+                "~HC_21~",
+              ];
+              baseFrames.push(
+                palavras
+                  .join("")
+                  .split("")
+                  .map((l, i) => `${a[i % a.length]} ${l}`)
+                  .join(" ")
+              );
+              break;
+            case "10":
+              for (let i = 1; i <= palavras.length; i++)
+                baseFrames.push(`${c1} ${palavras.slice(0, i).join(" ")}`);
+              break;
+          }
+
+          let repeatedFrames = [];
+          for (let i = 0; i < (estilo === "0" ? 1 : repeticoes); i++) {
+            repeatedFrames.push(...baseFrames);
+          }
+          if (estilo === "7" || estilo === "9") {
+            repeatedFrames = [];
+            for (let r = 0; r < repeticoes; r++) {
+              if (estilo === "7")
+                repeatedFrames.push(
+                  palavras
+                    .map(
+                      (p) =>
+                        `${
+                          cores[Math.floor(Math.random() * cores.length)].codigo
+                        } ${p}`
+                    )
+                    .join(" ")
+                );
+              if (estilo === "9") {
+                const a = [
+                  "~HC_6~",
+                  "~HC_7~",
+                  "~HC_9~",
+                  "~HC_12~",
+                  "~HC_18~",
+                  "~HC_21~",
+                ];
+                repeatedFrames.push(
+                  palavras
+                    .join("")
+                    .split("")
+                    .map((l, i) => `${a[(i + r) % a.length]} ${l}`)
+                    .join(" ")
+                );
+              }
+            }
+          }
+
+          const totalFrames = repeatedFrames.length;
+          const msg = repeatedFrames.map((frameContent, i) => {
+            const currentSize = calculateSize(
+              sizeStyle,
+              baseSize,
+              i,
+              totalFrames
+            );
+            return `<font size='${currentSize}'>${frameContent}</font>`;
+          });
+
+          resultadoFinal =
+            `bind keyboard "${tecla}" ";; me ${msg.join(
+              ` ; wait ${tempo};me `
+            )} ; wait ${tempo}"` + (anim ? `;${anim}` : "");
+        } else {
+          const comandosInput = sel("comandos").value.trim();
+          if (!comandosInput) {
+            alert("Por favor, insira os comandos.");
+            return;
+          }
+          const comandos = comandosInput
+            .split(",")
+            .map((cmd) => cmd.trim())
+            .filter(Boolean);
+          if (comandos.length === 0) {
+            alert("Nenhum comando válido encontrado.");
+            return;
+          }
+          resultadoFinal = `bind keyboard "${tecla}" "${comandos.join(
+            ` ; wait ${tempo} ; `
+          )}"`;
+        }
+
+        sel("resul").value = resultadoFinal;
+        sel("resul").select();
+        document.execCommand("copy");
+        alert("Bind copiada para a área de transferência!");
+      }
+
+      useMeBind.addEventListener("change", toggleUiMode);
+      sel("estilo").addEventListener("change", () => {
+        toggleConditionalVisibility();
+        updatePreview();
+      });
+      sel("repeticoes").addEventListener("change", updatePreview);
+      ["frase", "cor1", "cor2", "tamanhoEstilo"].forEach((id) =>
+        sel(id).addEventListener("input", updatePreview)
+      );
+      sel("fontSize").addEventListener("input", () => {
+        sel("fontSizeValue").textContent = sel("fontSize").value;
+        updatePreview();
+      });
+      sel("btnGerar").addEventListener("click", gerarBind);
+      sel("replayPreviewBtn").addEventListener("click", updatePreview);
+      sel("keyBtn").addEventListener("click", () => {
+        sel("keyBtn").textContent = "Pressione qualquer tecla";
+        const onKey = (e) => {
+          e.preventDefault();
+          const key = e.key === " " ? "SPACE" : e.key,
+            disp = e.key === " " ? "Space" : e.key.toUpperCase();
+          if (e.key === "Escape") {
+            sel("tecla").value = "";
+            sel("keyBtn").textContent = "Clique e pressione";
+          } else {
+            sel("tecla").value = key;
+            sel("keyBtn").textContent = disp;
+          }
+          window.removeEventListener("keydown", onKey, true);
+        };
+        window.addEventListener("keydown", onKey, true);
+      });
+      const animeInput = sel("anime");
+      animeInput.addEventListener("focus", () => (animeInput.placeholder = ""));
+      animeInput.addEventListener("blur", () => {
+        if (!animeInput.value) animeInput.placeholder = "e continencia";
+      });
+      const emojiBtn = sel("emojiBtn"),
+        emojiMenu = sel("emojiMenu"),
+        fraseInput = sel("frase");
+      const emojis = [
+        "❤",
+        "⭐",
+        "✨",
+        "⚡",
+        "💀",
+        "😂",
+        "👍",
+        "🙏",
+        "🔥",
+        "💯",
+      ];
+      emojis.forEach((emoji) => {
+        const emojiEl = document.createElement("div");
+        emojiEl.innerHTML = emoji;
+        emojiEl.addEventListener("click", () => {
+          const pos = fraseInput.selectionStart;
+          fraseInput.value =
+            fraseInput.value.substring(0, pos) +
+            emoji +
+            fraseInput.value.substring(pos);
+          fraseInput.focus();
+          fraseInput.selectionEnd = pos + emoji.length;
+          updatePreview();
+        });
+        emojiMenu.appendChild(emojiEl);
+      });
+      emojiBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        emojiMenu.classList.toggle("show");
+      });
+      window.addEventListener("click", () => {
+        if (emojiMenu.classList.contains("show"))
+          emojiMenu.classList.remove("show");
+      });
+
+      toggleUiMode();
+    </script>
+  </body>
+</html>
