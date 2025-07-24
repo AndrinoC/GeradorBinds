@@ -1,3 +1,5 @@
+https://andrinoc.github.io/GeradorBinds/Gerador
+
 # GeradorBinds
 Gerador de binds para FiveM.
 - Gera bind de comandos
